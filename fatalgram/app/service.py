@@ -35,9 +35,14 @@ class PhotoService:
 
     def get_exif(self, url):
         img = Image.open(url)
-        exif = {
-            ExifTags.TAGS[k]: v for k, v in img._getexif().items() if k in ExifTags.TAGS
-        }
+        try:
+            exif = {
+                ExifTags.TAGS[k]: v
+                for k, v in img._getexif().items()
+                if k in ExifTags.TAGS
+            }
+        except AttributeError:
+            exif = {}
         return exif
 
     def generateThumbnail(self, photo_path, photo):
@@ -58,11 +63,21 @@ class PhotoService:
 
         photo = Photo(description=photo_name, author=user)
         photo.photo_raw.save(photo_name, image_raw)
-        photo.photo_taken = datetime.strptime(exifData["DateTime"], "%Y:%m:%d %H:%M:%S")
-        photo.photo_camera = exifData["Model"]
-        photo.photo_lat = gpsData["Latitude"]
-        photo.photo_lon = gpsData["Longitude"]
-        photo.photo_alt = gpsData["Altitude"]
+        try:
+            photo.photo_taken = datetime.strptime(
+                exifData["DateTime"], "%Y:%m:%d %H:%M:%S"
+            )
+            photo.photo_camera = exifData["Model"]
+        except KeyError:
+            pass
+
+        try:
+            photo.photo_lat = gpsData["Latitude"]
+            photo.photo_lon = gpsData["Longitude"]
+            photo.photo_alt = gpsData["Altitude"]
+        except KeyError:
+            pass
+
         photo.save()
         self.generateThumbnail(photo_path=photo_path, photo=photo)
 

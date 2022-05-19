@@ -1,14 +1,23 @@
-import datetime
-
 from django.core.files.storage import FileSystemStorage
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.shortcuts import render
 
+from .models import Photo
 from .service import PhotoService
 
 
 def home(request):
-    now = datetime.datetime.now()
-    return render(request, "pages/home.html", {"time": now})
+    photo_list = Photo.objects.all().order_by("photo_taken").reverse()
+
+    page = request.GET.get("page", 1)
+    paginator = Paginator(photo_list, 4)
+    try:
+        photos = paginator.page(page)
+    except PageNotAnInteger:
+        photos = paginator.page(1)
+    except EmptyPage:
+        photos = paginator.page(paginator.num_pages)
+    return render(request, "pages/home.html", {"photos": photos})
 
 
 def photo_upload(request):
