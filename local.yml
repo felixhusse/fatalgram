@@ -17,6 +17,7 @@ services:
       - redis
     volumes:
       - .:/app:z
+      - ./fatalgram/media:/app/media
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres

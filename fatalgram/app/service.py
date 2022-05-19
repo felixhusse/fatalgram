@@ -16,7 +16,7 @@ class PhotoService:
         photo.delete()
         return
 
-    def processZipFile(self, trip, photozip, user):
+    def processZipFile(self, photozip, user):
         with tempfile.TemporaryDirectory() as tmpdirname:
             with ZipFile(photozip, "r") as zippedImgs:
                 for filename in zippedImgs.namelist():
@@ -24,16 +24,14 @@ class PhotoService:
                         ".jpg" in filename or ".JPG" in filename
                     ):
                         zippedImgs.extract(filename, path=tmpdirname)
-            self.importFolder(trip=trip, photo_folder=tmpdirname, user=user)
+            self.importFolder(photo_folder=tmpdirname, user=user)
         os.remove(photozip)
         return
 
-    def importFolder(self, trip, photo_folder, user):
+    def importFolder(self, photo_folder, user):
         for dirName, subdirList, fileList in os.walk(photo_folder):
             for fname in fileList:
-                self.processPhoto(
-                    photo_path=os.path.join(dirName, fname), trip=trip, user=user
-                )
+                self.processPhoto(photo_path=os.path.join(dirName, fname), user=user)
 
     def get_exif(self, url):
         img = Image.open(url)
@@ -52,12 +50,13 @@ class PhotoService:
         )
         photo.photo_thumb.save(filename + "_thumbnail.jpg", image_thumb)
 
-    def processPhoto(self, photo_path, trip, user):
+    def processPhoto(self, photo_path, user):
         exifData = self.get_exif(photo_path)
         gpsData = gpsphoto.getGPSData(photo_path)
         photo_name = os.path.basename(photo_path)
         image_raw = File(open(photo_path, "rb"))
-        photo = Photo(trip=trip, description=photo_name, author=user)
+
+        photo = Photo(description=photo_name, author=user)
         photo.photo_raw.save(photo_name, image_raw)
         photo.photo_taken = datetime.strptime(exifData["DateTime"], "%Y:%m:%d %H:%M:%S")
         photo.photo_camera = exifData["Model"]
