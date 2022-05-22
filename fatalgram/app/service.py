@@ -20,9 +20,7 @@ class PhotoService:
         with tempfile.TemporaryDirectory() as tmpdirname:
             with ZipFile(photozip, "r") as zippedImgs:
                 for filename in zippedImgs.namelist():
-                    if "MACOSX" not in filename and (
-                        ".jpg" in filename or ".JPG" in filename
-                    ):
+                    if "MACOSX" not in filename and (".jpg" in filename or ".JPG"):
                         zippedImgs.extract(filename, path=tmpdirname)
             self.importFolder(photo_folder=tmpdirname, user=user)
         os.remove(photozip)

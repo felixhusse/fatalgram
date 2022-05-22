@@ -3,14 +3,14 @@ from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.shortcuts import render
 
 from .models import Photo
-from .service import PhotoService
+from .tasks import process_photo_zip
 
 
 def home(request):
-    photo_list = Photo.objects.all().order_by("photo_taken").reverse()
+    photo_list = Photo.objects.all().order_by("description").reverse()
 
     page = request.GET.get("page", 1)
-    paginator = Paginator(photo_list, 4)
+    paginator = Paginator(photo_list, 10)
     try:
         photos = paginator.page(page)
     except PageNotAnInteger:
@@ -25,15 +25,15 @@ def photo_upload(request):
         photozip = request.FILES["photozip"]
         fs = FileSystemStorage()
         filename = fs.save("gallery/temp/" + photozip.name, photozip)
+
+        process_photo_zip.delay(filename=filename, user_id=request.user.id)
+
         uploaded_file_url = fs.url(filename)
-        photoService = PhotoService()
-        result = photoService.processZipFile(
-            photozip=fs.path(filename), user=request.user
-        )
+
         return render(
             request,
             "pages/upload.html",
-            {"uploaded_file_url": uploaded_file_url, "result": result},
+            {"uploaded_file_url": uploaded_file_url},
         )
 
     return render(request, "pages/upload.html", {})
