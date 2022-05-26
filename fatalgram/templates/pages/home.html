@@ -10,7 +10,7 @@
             {% for person in persons %}
               <div class="col-md-1">
                 <a href="?person={{ person.id }}">
-                  <img src="{{person.face_thumb.url}}" alt="" class="rounded-circle img-thumbnail" width="75px" height="75px">
+                  <img src="{{ person.personencoding_set.all.0.face_thumb.url }}" alt="" class="rounded-circle img-thumbnail" width="75px" height="75px">
                 </a>
               </div>
             {% endfor %}

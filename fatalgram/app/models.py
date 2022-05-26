@@ -69,7 +69,7 @@ class Person(models.Model):
         self.save()
 
     def __str__(self):
-        return self.name
+        return self.name + f"_{self.id}"
 
 
 class PersonEncoding(models.Model):
