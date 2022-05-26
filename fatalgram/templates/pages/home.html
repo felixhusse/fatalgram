@@ -6,6 +6,15 @@
 {% block content %}
   <div class="album py-5">
       <div class="container">
+          <div class="row">
+            {% for person in persons %}
+              <div class="col-md-1">
+                <a href="?person={{ person.id }}">
+                  <img src="{{person.face_thumb.url}}" alt="" class="rounded-circle img-thumbnail" width="75px" height="75px">
+                </a>
+              </div>
+            {% endfor %}
+          </div>
           <div class="row infinite-container">
               {% for photo in photos %}
                   <div class="col-md-3 infinite-item">
@@ -19,13 +28,18 @@
               {% endfor %}
           </div>
           {% if photos.has_next %}
-          <a class="infinite-more-link" href="?page={{ photos.next_page_number }}"></a>
+            {% if 'person' in request.GET %}
+                <a class="infinite-more-link" href="?person={{ request.GET.person }}&page={{ photos.next_page_number }}"></a>
+            {% else %}
+              <a class="infinite-more-link" href="?page={{ photos.next_page_number }}"></a>
+            {% endif %}
+            <div class="d-flex justify-content-center" style="display:none;">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
           {% endif %}
-          <div class="d-flex justify-content-center" style="display:none;">
-              <div class="spinner-border" role="status">
-                  <span class="sr-only">Loading...</span>
-              </div>
-          </div>
+
       </div>
   </div>
   <script>
