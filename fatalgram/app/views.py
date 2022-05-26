@@ -73,7 +73,7 @@ def delete_gallery(request):
         face_service.delete_person(person)
 
     for photo in photo_list:
-        photo_service.deletePhoto(photo_pk=photo.id)
+        photo_service.delete_photo(photo_pk=photo.id)
 
     return JsonResponse({"result": "done"})
 

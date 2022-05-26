@@ -11,6 +11,10 @@ def path_highquality(instance, filename):
     return f"gallery/user_{instance.author.username}/hd/{filename}"
 
 
+def path_mediumquality(instance, filename):
+    return f"gallery/user_{instance.author.username}/md/{filename}"
+
+
 def path_thumb(instance, filename):
     return f"gallery/user_{instance.author.username}/thumbs/{filename}"
 
@@ -43,6 +47,8 @@ class Photo(models.Model):
     photo_alt = models.CharField(max_length=200, null=True)
     photo_raw = models.ImageField(upload_to=path_raw)
     photo_thumb = models.ImageField(upload_to=path_thumb)
+    photo_high = models.ImageField(upload_to=path_highquality, null=True)
+    photo_medium = models.ImageField(upload_to=path_mediumquality, null=True)
     upload_date = models.DateTimeField(default=timezone.now)
 
     def publish(self):

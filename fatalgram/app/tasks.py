@@ -11,6 +11,6 @@ app = Celery("fatalgram")
 @app.task(name="process-photo-zip")
 def process_photo_zip(filename, user_id):
     fs = FileSystemStorage()
-    photoService = PhotoService()
+    photo_service = PhotoService()
     user = User.objects.get(pk=user_id)
-    photoService.processZipFile(photozip=fs.path(filename), user=user)
+    photo_service.process_zip_file(photozip=fs.path(filename), user=user)

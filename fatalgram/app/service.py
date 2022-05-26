@@ -1,12 +1,10 @@
 import os
 import tempfile
-from datetime import datetime
 from io import BytesIO
 from zipfile import ZipFile
 
 import face_recognition
 from django.core.files import File
-from GPSPhoto import gpsphoto
 from PIL import ExifTags, Image, ImageOps
 
 from .models import Person, Photo, Trip
@@ -57,102 +55,78 @@ class FaceService:
 
 
 class PhotoService:
-    def deletePhoto(self, photo_pk):
+    def delete_photo(self, photo_pk):
         photo = Photo.objects.get(pk=photo_pk)
         photo.photo_raw.delete()
         photo.photo_thumb.delete()
         photo.delete()
 
-    def processZipFile(self, photozip, user):
+    def process_zip_file(self, photozip, user):
         with tempfile.TemporaryDirectory() as tmpdirname:
             with ZipFile(photozip, "r") as zippedImgs:
                 for filename in zippedImgs.namelist():
                     if "MACOSX" not in filename and (".jpg" in filename or ".JPG"):
                         zippedImgs.extract(filename, path=tmpdirname)
-            self.importFolder(photo_folder=tmpdirname, user=user)
+            self.import_folder(photo_folder=tmpdirname, user=user)
         os.remove(photozip)
         return
 
-    def importFolder(self, photo_folder, user):
+    def import_folder(self, photo_folder, user):
         for dirName, subdirList, fileList in os.walk(photo_folder):
             for fname in fileList:
                 if ".jpg" in fname or ".JPG" in fname:
-                    self.processPhoto(
+                    self.process_photo(
                         photo_path=os.path.join(dirName, fname), user=user
                     )
 
-    def get_exif(self, url):
-        img = Image.open(url)
-        try:
-            exif = {
-                ExifTags.TAGS[k]: v
-                for k, v in img._getexif().items()
-                if k in ExifTags.TAGS
-            }
-        except AttributeError:
-            exif = {}
-        return exif
-
-    def generateThumbnail(self, photo_path, photo):
-        size = (300, 300)
-        try:
-            image = Image.open(photo_path)
-            if hasattr(image, "_getexif"):  # only present in JPEGs
-                for orientation in ExifTags.TAGS.keys():
-                    if ExifTags.TAGS[orientation] == "Orientation":
-                        break
-                e = image._getexif()  # returns None if no EXIF data
-                if e is not None:
-                    exif = dict(e.items())
-                    orientation = exif[orientation]
-
-                    if orientation == 3:
-                        image = image.transpose(Image.ROTATE_180)
-                    elif orientation == 6:
-                        image = image.transpose(Image.ROTATE_270)
-                    elif orientation == 8:
-                        image = image.transpose(Image.ROTATE_90)
-
-            image = ImageOps.fit(image, size, Image.ANTIALIAS)
-            filename, ext = os.path.splitext(os.path.basename(photo_path))
-
-            image.save(os.path.dirname(photo_path) + "/" + filename + "_thumbnail.jpg")
-            image_thumb = File(
-                open(
-                    os.path.dirname(photo_path) + "/" + filename + "_thumbnail.jpg",
-                    "rb",
-                )
-            )
-            photo.photo_thumb.save(filename + "_thumbnail.jpg", image_thumb)
-
-        except AttributeError:
-            pass
-
-    def processPhoto(self, photo_path, user):
-        exifData = self.get_exif(photo_path)
-        gpsData = gpsphoto.getGPSData(photo_path)
+    def process_photo(self, photo_path, user):
         photo_name = os.path.basename(photo_path)
         image_raw = File(open(photo_path, "rb"))
-
         photo = Photo(description=photo_name, author=user)
         photo.photo_raw.save(photo_name, image_raw)
-        try:
-            photo.photo_taken = datetime.strptime(
-                exifData["DateTime"], "%Y:%m:%d %H:%M:%S"
-            )
-            photo.photo_camera = exifData["Model"]
-        except KeyError:
-            pass
-
-        try:
-            photo.photo_lat = gpsData["Latitude"]
-            photo.photo_lon = gpsData["Longitude"]
-            photo.photo_alt = gpsData["Altitude"]
-        except KeyError:
-            pass
-
         photo.save()
-        self.generateThumbnail(photo_path=photo_path, photo=photo)
+        pil_image = self.correct_orientation(pil_image=Image.open(photo_path))
+        photo.photo_thumb.save(
+            photo_name + "_sm.jpg",
+            self.generate_thumb(pil_image=pil_image, size=(300, 300), fit_size=True),
+        )
+        photo.photo_high.save(
+            photo_name + "_hq.jpg",
+            self.generate_thumb(pil_image=pil_image, size=(1920, 1920), fit_size=False),
+        )
+        photo.photo_medium.save(
+            photo_name + "_md.jpg",
+            self.generate_thumb(pil_image=pil_image, size=(1080, 1080), fit_size=False),
+        )
+
+    def correct_orientation(self, pil_image):
+        if hasattr(pil_image, "_getexif"):  # only present in JPEGs
+            for orientation in ExifTags.TAGS.keys():
+                if ExifTags.TAGS[orientation] == "Orientation":
+                    break
+            e = pil_image._getexif()  # returns None if no EXIF data
+            if e is not None:
+                exif = dict(e.items())
+                orientation = exif[orientation]
+
+                if orientation == 3:
+                    pil_image = pil_image.transpose(Image.ROTATE_180)
+                elif orientation == 6:
+                    pil_image = pil_image.transpose(Image.ROTATE_270)
+                elif orientation == 8:
+                    pil_image = pil_image.transpose(Image.ROTATE_90)
+        return pil_image
+
+    def generate_thumb(self, pil_image, size, fit_size):
+        modified_image = pil_image.copy()
+        if fit_size is True:
+            modified_image = ImageOps.fit(modified_image, size, Image.ANTIALIAS)
+        else:
+            modified_image.thumbnail(size, Image.ANTIALIAS)
+
+        image_blob = BytesIO()
+        modified_image.save(image_blob, "jpeg")
+        return image_blob
 
 
 class TripService:
