@@ -7,8 +7,16 @@ def path_raw(instance, filename):
     return f"gallery/user_{instance.author.username}/raw/{filename}"
 
 
+def path_highquality(instance, filename):
+    return f"gallery/user_{instance.author.username}/hd/{filename}"
+
+
 def path_thumb(instance, filename):
     return f"gallery/user_{instance.author.username}/thumbs/{filename}"
+
+
+def path_face_thumb(instance, filename):
+    return f"gallery/user_{instance.person.author.username}/faces/{filename}"
 
 
 class Trip(models.Model):
@@ -24,7 +32,6 @@ class Trip(models.Model):
         return self.title
 
 
-# Create your models here.
 class Photo(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     trip = models.ForeignKey(Trip, blank=True, null=True, on_delete=models.SET_NULL)
@@ -43,3 +50,29 @@ class Photo(models.Model):
 
     def __str__(self):
         return self.description
+
+
+class Person(models.Model):
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True
+    )
+    name = models.CharField(max_length=200)
+    photos = models.ManyToManyField("Photo", null=True)
+
+    def publish(self):
+        self.save()
+
+    def __str__(self):
+        return self.name
+
+
+class PersonEncoding(models.Model):
+    face_encoding = models.TextField()
+    face_thumb = models.ImageField(upload_to=path_face_thumb)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+
+    def publish(self):
+        self.save()
+
+    def __str__(self):
+        return self.person.name + f"_{self.id}"

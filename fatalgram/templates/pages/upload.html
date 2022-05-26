@@ -4,20 +4,81 @@
 {% block title %}fatalgram - your personal A.I.{% endblock %}
 
 {% block content %}
-  <div class="row justify-content-center">
-      <div class="col-8">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="text" name="trip_id">
-            <input type="file" name="photozip">
-            <button type="submit" class="btn btn-success">Upload</button>
-          </form>
-      </div>
-  </div>
+  <div class="container">
+    <div class="row justify-content-center">
+        <div class="col-8">
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <input type="text" name="trip_id">
+              <input type="file" name="photozip">
+              <button type="submit" class="btn btn-success">Upload</button>
+            </form>
+        </div>
+    </div>
 
-  {% if uploaded_file_url %}
-    <p>File uploaded at: <a href="{{ uploaded_file_url }}">{{ uploaded_file_url }}</a></p>
-    <p>Content: {{ result }}</p>
-  {% endif %}
-  <p><a href="{% url 'app:home' %}">Return to home</a></p>
+    {% if uploaded_file_url %}
+      <p>File uploaded at: <a href="{{ uploaded_file_url }}">{{ uploaded_file_url }}</a></p>
+      <p>Content: {{ result }}</p>
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-3">
+            <button type="button" class="btn btn-danger" id="deletegallery">delete Gallery</button>
+        </div>
+        <div class="col-md-3">
+            <button type="button" class="btn btn-primary" id="deleteperson">clear Persons</button>
+        </div>
+        <div class="col-md-3">
+            <button type="button" class="btn btn-primary" id="rescan">rescan Persons</button>
+        </div>
+        <div class="col-md-3">
+            <button type="button" class="btn btn-primary" id="testscan">whatever</button>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+      <div id="buttonresults">
+
+      </div>
+    </div>
+
+  </div>
+  <script>
+    $("#deletegallery").click(function(){
+      $.ajax({
+          url: "/admin/gallery/delete",
+          success: function(result){
+                    $("#buttonresults").html(result['result']);
+          },
+      });
+    });
+
+    $("#deleteperson").click(function(){
+      $.ajax({
+          url: "/admin/facerecognition/delete",
+          success: function(result){
+                    $("#buttonresults").html(result['result']);
+          },
+      });
+    });
+
+    $("#rescan").click(function(){
+      $("#buttonresults").html('<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>');
+      $.ajax({
+          url: "admin/facerecognition/rescan",
+          success: function(result){
+                    $("#buttonresults").html(result['result']);
+          },
+      });
+    });
+
+    $("#testscan").click(function(){
+      $("#buttonresults").html('<div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>');
+      $.ajax({
+          url: "admin/facerecognition/test?img=IMG_7420.JPG",
+          success: function(result){
+                    $("#buttonresults").html(result['result'] + "<p><ul>" + result['images'] + "</ul>");
+          },
+      });
+    });
+  </script>
 {% endblock %}
