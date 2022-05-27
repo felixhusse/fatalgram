@@ -1,5 +1,4 @@
 import os
-import tempfile
 from io import BytesIO
 from zipfile import ZipFile
 
@@ -73,23 +72,16 @@ class PhotoService:
         photo.photo_thumb.delete()
         photo.delete()
 
-    def process_zip_file(self, photozip, user):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            with ZipFile(photozip, "r") as zippedImgs:
-                for filename in zippedImgs.namelist():
-                    if "MACOSX" not in filename and (".jpg" in filename or ".JPG"):
-                        zippedImgs.extract(filename, path=tmpdirname)
-            self.import_folder(photo_folder=tmpdirname, user=user)
+    def extract_zip_file(self, photozip):
+        photo_images = []
+        extracted_path = os.path.splitext(photozip)[0]
+        with ZipFile(photozip, "r") as zippedImgs:
+            for filename in zippedImgs.namelist():
+                if "MACOSX" not in filename and (".jpg" in filename or ".JPG"):
+                    zippedImgs.extract(filename, path=extracted_path)
+                    photo_images.append(os.path.join(extracted_path, filename))
         os.remove(photozip)
-        return
-
-    def import_folder(self, photo_folder, user):
-        for dirName, subdirList, fileList in os.walk(photo_folder):
-            for fname in fileList:
-                if ".jpg" in fname or ".JPG" in fname:
-                    self.process_photo(
-                        photo_path=os.path.join(dirName, fname), user=user
-                    )
+        return photo_images
 
     def process_photo(self, photo_path, user):
         photo_name = os.path.basename(photo_path)
@@ -111,6 +103,11 @@ class PhotoService:
             self.generate_thumb(pil_image=pil_image, size=(1080, 1080), fit_size=False),
         )
         photo.save()
+        os.remove(photo_path)
+        if not os.listdir(os.path.dirname(photo_path)):
+            os.rmdir(os.path.dirname(photo_path))
+
+        return photo.id
 
     def correct_orientation(self, pil_image):
         if hasattr(pil_image, "_getexif"):  # only present in JPEGs
