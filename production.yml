@@ -14,9 +14,6 @@ services:
     depends_on:
       - postgres
       - redis
-    env_file:
-      - ./.envs/.production/.django
-      - ./.envs/.production/.postgres
     command: /start
 
   postgres:
@@ -27,8 +24,6 @@ services:
     volumes:
       - production_postgres_data:/var/lib/postgresql/data:Z
       - production_postgres_data_backups:/backups:z
-    env_file:
-      - ./.envs/.production/.postgres
 
   redis:
     image: redis:6
