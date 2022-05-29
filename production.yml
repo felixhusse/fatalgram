@@ -11,6 +11,8 @@ services:
       dockerfile: ./compose/production/django/Dockerfile
     image: fatalgram_production_django
     platform: linux/x86_64
+    volumes:
+      - media_data:/app/fatalgram/media
     depends_on:
       - postgres
       - redis
