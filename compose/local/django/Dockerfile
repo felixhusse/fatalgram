@@ -1,7 +1,7 @@
 ARG PYTHON_VERSION=3.9-slim-bullseye
 
 # define an alias for the specfic python version used in this file.
-FROM ai-image:latest as python
+FROM fatalix/face-recognition-base:latest as python
 
 # Python build stage
 FROM python as python-build-stage
