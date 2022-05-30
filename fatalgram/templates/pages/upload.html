@@ -9,11 +9,21 @@
         <div class="col-8">
             <form method="post" enctype="multipart/form-data">
               {% csrf_token %}
-              <input type="text" name="trip_id">
               <input type="file" name="photozip">
               <button type="submit" class="btn btn-success">Upload</button>
             </form>
         </div>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col">
+        <p>base_dir: {{ base_dir }}</p>
+      </div>
+      <div class="col">
+        <p>media_root: {{ media_root }}</p>
+      </div>
+      <div class="col">
+        <p>media_url: {{ media_url }}</p>
+      </div>
     </div>
 
     {% if uploaded_file_url %}

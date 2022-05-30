@@ -3,7 +3,8 @@ version: '3'
 volumes:
   production_postgres_data: {}
   production_postgres_data_backups: {}
-  media_data:
+  media_data: {}
+  static_data: {}
 
 services:
   django: &django
@@ -13,7 +14,10 @@ services:
     image: fatalgram_production_django
     platform: linux/x86_64
     volumes:
-      - media_data:/app/fatalgram/media
+      - media_data:/app/deployment/media:z
+      - static_data:/app/deployment/static:z
+    ports:
+      - "5000:5000"
     depends_on:
       - postgres
       - redis
@@ -21,6 +25,21 @@ services:
       - ./.envs/.production/.django
       - ./.envs/.production/.postgres
     command: /start
+
+  nginx:
+    container_name: fatalgram_production_nginx
+    build:
+      context: .
+      dockerfile: ./compose/production/nginx/Dockerfile
+    image: nginx
+    restart: always
+    depends_on:
+      - django
+    ports:
+      - "80:80"
+    volumes:
+      - media_data:/app/deployment/media:z
+      - static_data:/app/deployment/static:z
 
   postgres:
     build:
@@ -40,13 +59,16 @@ services:
     <<: *django
     image: fatalgram_production_celeryworker
     command: /start-celeryworker
+    ports: []
 
   celerybeat:
     <<: *django
     image: fatalgram_production_celerybeat
     command: /start-celerybeat
+    ports: []
 
   flower:
     <<: *django
     image: fatalgram_production_flower
     command: /start-flower
+    ports: []

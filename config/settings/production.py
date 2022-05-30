@@ -1,5 +1,9 @@
+import os
+
 from .base import *  # noqa
 from .base import env
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -56,9 +60,13 @@ SECURE_CONTENT_TYPE_NOSNIFF = env.bool(
 
 # STATIC
 # ------------------------
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "deployment", "static")
+STATIC_URL = "/static/"
+
 # MEDIA
 # ------------------------------------------------------------------------------
+MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "deployment", "media")
+MEDIA_URL = "/media/"
 
 # EMAIL
 # ------------------------------------------------------------------------------
@@ -120,21 +128,27 @@ LOGGING = {
             "class": "django.utils.log.AdminEmailHandler",
         },
         "console": {
-            "level": "DEBUG",
+            "level": "INFO",
             "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": "/app/django.log",
             "formatter": "verbose",
         },
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
         "django.request": {
-            "handlers": ["mail_admins"],
+            "handlers": ["console"],
             "level": "ERROR",
             "propagate": True,
         },
         "django.security.DisallowedHost": {
             "level": "ERROR",
-            "handlers": ["console", "mail_admins"],
+            "handlers": ["console"],
             "propagate": True,
         },
     },

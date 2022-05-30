@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import JsonResponse
@@ -40,10 +41,25 @@ def photo_upload(request):
         return render(
             request,
             "pages/upload.html",
-            {"uploaded_file_url": uploaded_file_url},
+            {
+                "uploaded_file_url": uploaded_file_url,
+                "installed_apps": settings.INSTALLED_APPS,
+                "media_root": settings.MEDIA_ROOT,
+                "media_url": settings.MEDIA_URL,
+                "base_dir": settings.BASE_DIR,
+            },
         )
 
-    return render(request, "pages/upload.html", {})
+    return render(
+        request,
+        "pages/upload.html",
+        {
+            "installed_apps": settings.INSTALLED_APPS,
+            "media_root": settings.MEDIA_ROOT,
+            "media_url": settings.MEDIA_URL,
+            "base_dir": settings.BASE_DIR,
+        },
+    )
 
 
 def person_recognize(request):
