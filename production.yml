@@ -16,8 +16,6 @@ services:
     volumes:
       - media_data:/app/deployment/media:z
       - static_data:/app/deployment/static:z
-    ports:
-      - "5000:5000"
     depends_on:
       - postgres
       - redis
@@ -35,8 +33,6 @@ services:
     restart: always
     depends_on:
       - django
-    ports:
-      - "80:80"
     volumes:
       - media_data:/app/deployment/media:z
       - static_data:/app/deployment/static:z
