@@ -11,3 +11,11 @@
   background-color: #f2dede;
   border-color: #eed3d7;
 }
+
+.fatalgram .container {
+  max-width: 40rem;
+}
+
+.fatalgram-heading {
+  font-weight: 300;
+}

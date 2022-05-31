@@ -1,12 +1,14 @@
-from django.conf import settings
+from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, reverse
+from django.views.generic.edit import FormView
 
+from .forms import FileFieldForm
 from .models import Person, Photo
 from .service import FaceService, PhotoService
-from .tasks import process_faces, process_photo_zip
+from .tasks import process_faces, process_photo_image, process_photo_zip
 
 
 def home(request):
@@ -30,7 +32,7 @@ def home(request):
     return render(request, "pages/home.html", {"photos": photos, "persons": persons})
 
 
-def photo_upload(request):
+def gallery_admin(request):
     if request.method == "POST" and request.FILES["photozip"]:
         photozip = request.FILES["photozip"]
         fs = FileSystemStorage()
@@ -40,31 +42,40 @@ def photo_upload(request):
 
         return render(
             request,
-            "pages/upload.html",
-            {
-                "uploaded_file_url": uploaded_file_url,
-                "installed_apps": settings.INSTALLED_APPS,
-                "media_root": settings.MEDIA_ROOT,
-                "media_url": settings.MEDIA_URL,
-                "base_dir": settings.BASE_DIR,
-            },
+            "pages/admin.html",
+            {"uploaded_file_url": uploaded_file_url},
         )
 
     return render(
         request,
-        "pages/upload.html",
-        {
-            "installed_apps": settings.INSTALLED_APPS,
-            "media_root": settings.MEDIA_ROOT,
-            "media_url": settings.MEDIA_URL,
-            "base_dir": settings.BASE_DIR,
-        },
+        "pages/admin.html",
+        {},
     )
 
 
-def person_recognize(request):
+class FileFieldFormView(FormView):
+    form_class = FileFieldForm
+    template_name = "pages/photoupload.html"  # Replace with your template.
+    success_url = "/photoupload"  # Replace with your URL or reverse().
 
-    return render(request, "pages/about.html", {})
+    def get_success_url(self):
+        messages.add_message(self.request, messages.SUCCESS, "Images uploaded.")
+        return reverse("app:photoupload")
+
+    def post(self, request, *args, **kwargs):
+        form_class = self.get_form_class()
+        form = self.get_form(form_class)
+        files = request.FILES.getlist("file_field")
+        fs = FileSystemStorage()
+        if form.is_valid():
+            for file in files:
+                filename = fs.save("gallery/temp/" + file.name, file)
+                process_photo_image.delay(
+                    photo_image=fs.path(filename), user_id=request.user.id
+                )
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
 
 
 def clear_persons(request):

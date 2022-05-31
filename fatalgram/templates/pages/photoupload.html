@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}fatalgram - your personal A.I.{% endblock %}
+
+{% block content %}
+
+  <form method="post" enctype="multipart/form-data" action="">
+    {% csrf_token %}
+    <input type="file" name="file_field" multiple />
+    <input type="submit" value="upload" />
+  </form>
+
+{% endblock %}
