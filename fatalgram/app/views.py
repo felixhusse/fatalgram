@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core.files.storage import FileSystemStorage
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import JsonResponse
@@ -11,6 +12,7 @@ from .service import FaceService, PhotoService
 from .tasks import process_faces, process_photo_image, process_photo_zip
 
 
+@login_required()
 def home(request):
 
     photo_list = Photo.objects.all().order_by("description").reverse()
@@ -32,6 +34,7 @@ def home(request):
     return render(request, "pages/home.html", {"photos": photos, "persons": persons})
 
 
+@login_required(login_url="account_login")
 def gallery_admin(request):
     if request.method == "POST" and request.FILES["photozip"]:
         photozip = request.FILES["photozip"]
@@ -78,6 +81,7 @@ class FileFieldFormView(FormView):
             return self.form_invalid(form)
 
 
+@login_required(login_url="/accounts/login/")
 def clear_persons(request):
     face_service = FaceService()
 
@@ -87,6 +91,7 @@ def clear_persons(request):
     return JsonResponse({"result": "done"})
 
 
+@login_required(login_url="/accounts/login/")
 def delete_gallery(request):
     photo_list = Photo.objects.all()
     photo_service = PhotoService()
@@ -101,6 +106,7 @@ def delete_gallery(request):
     return JsonResponse({"result": "done"})
 
 
+@login_required(login_url="account_login")
 def rescan_gallery(request):
     photo_list = Photo.objects.all()
     for photo in photo_list:
@@ -108,5 +114,6 @@ def rescan_gallery(request):
     return JsonResponse({"result": "done"})
 
 
+@login_required(login_url="/accounts/login/")
 def test_scan(request):
     return JsonResponse({"result": "no function implemented"})
