@@ -36,11 +36,13 @@
 
     <div class="row infinite-container">
         {% for photo in photos %}
-            <div class="col-md-3 infinite-item">
-                <div class="card mb-4 shadow-sm">
-                    <img class="img-thumbnail"  src="{{photo.photo_thumb.url}}"/>
-                </div>
+          <div class="col-md-3 infinite-item">
+            <div class="card mb-4 shadow-sm">
+              <a href="{% url 'app:photo_details' photo_id=photo.id %}">
+                <img class="img-thumbnail"  src="{{photo.photo_thumb.url}}"/>
+              </a>
             </div>
+          </div>
         {% endfor %}
     </div>
     {% if photos.has_next %}

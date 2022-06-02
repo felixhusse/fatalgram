@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}fatalgram - your personal A.I.{% endblock %}
+
+{% block content %}
+
+<div class="album py-5 bg-light">
+  <div class="row">
+    <div class="col-sm-8">
+      <div class="card mb-4 shadow-sm">
+        <img class="img-thumbnail"  src="{{photo.photo_high.url}}"/>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <h4>
+            Persons in this image
+          </h4>
+          <div class="d-flex flex-row mb-3">
+            {% for person in photo.person_set.all %}
+              <div class="p-2 fw-ligh text-center ">
+                <div>
+                <img src="{{ person.personencoding_set.all.0.face_thumb.url }}" alt="" class="person rounded-circle img-thumbnail" width="75px" height="75px">
+                </div>
+                <div>
+                  <a href="{% url 'app:person_details' person_id=person.id %}">
+                    {{ person.name }}
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+0

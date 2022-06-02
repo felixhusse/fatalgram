@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.storage import FileSystemStorage
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import JsonResponse
-from django.shortcuts import render, reverse
+from django.shortcuts import get_object_or_404, render, reverse
 from django.views.generic.edit import FormView
 
 from .forms import FileFieldForm
@@ -36,6 +36,18 @@ def home(request):
         "pages/home.html",
         {"photos": photos, "persons": persons, "selected_person": selected_person},
     )
+
+
+@login_required(login_url="account_login")
+def photo_details(request, photo_id):
+    photo = get_object_or_404(Photo, pk=photo_id)
+    return render(request, "pages/photodetail.html", {"photo": photo})
+
+
+@login_required(login_url="account_login")
+def person_details(request, person_id):
+    person = get_object_or_404(Person, pk=person_id)
+    return render(request, "pages/persondetail.html", {"person": person})
 
 
 @login_required(login_url="account_login")
