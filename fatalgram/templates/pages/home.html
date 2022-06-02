@@ -9,47 +9,52 @@
       <h1 class="fatalgram-heading">Welcome to fatalgram</h1>
       <p class="lead text-muted">
         Ever wondered how Google, Meta & Apple are identifying/tagging persons in your photos? Try it out and upload some
-        <a href="/photoupload">photos</a> and check out if your friends are identified.
+        <a href="{% url 'app:photoupload' %}">photos</a> and check out if your friends are identified.
       </p>
     </div>
   </section>
+
+
   <div class="album py-5 bg-light">
-      <div class="container">
-          <div class="row">
-            {% for person in persons %}
-              <div class="col-md-1">
-                <a href="?person={{ person.id }}">
-                  <img src="{{ person.personencoding_set.all.0.face_thumb.url }}" alt="" class="rounded-circle img-thumbnail" width="75px" height="75px">
-                </a>
-              </div>
-            {% endfor %}
-          </div>
-          <div class="row infinite-container">
-              {% for photo in photos %}
-                  <div class="col-md-3 infinite-item">
-                      <div class="card mb-4 shadow-sm">
-                          <img class="img-thumbnail"  src="{{photo.photo_thumb.url}}"/>
-                          <div class="card-body">
-                            <h5 class="card-title">{{photo.description}}</h5>
-                          </div>
-                      </div>
-                  </div>
-              {% endfor %}
-          </div>
-          {% if photos.has_next %}
-            {% if 'person' in request.GET %}
-                <a class="infinite-more-link" href="?person={{ request.GET.person }}&page={{ photos.next_page_number }}"></a>
-            {% else %}
-              <a class="infinite-more-link" href="?page={{ photos.next_page_number }}"></a>
-            {% endif %}
-            <div class="d-flex justify-content-center" style="display:none;">
-                <div class="spinner-border" role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-            </div>
+    <div class="scrolling-wrapper row flex-row flex-nowrap">
+
+      {% for person in persons %}
+        <div class="col-2">
+          {% if selected_person.id == person.id %}
+            <a href="{% url 'app:home' %}">
+              <img src="{{ person.personencoding_set.all.0.face_thumb.url }}" alt="" class="person-selected rounded-circle img-thumbnail" width="75px" height="75px">
+            </a>
+          {% else %}
+            <a href="?person={{ person.id }}">
+              <img src="{{ person.personencoding_set.all.0.face_thumb.url }}" alt="" class="rounded-circle img-thumbnail" width="75px" height="75px">
+            </a>
           {% endif %}
 
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="row infinite-container">
+        {% for photo in photos %}
+            <div class="col-md-3 infinite-item">
+                <div class="card mb-4 shadow-sm">
+                    <img class="img-thumbnail"  src="{{photo.photo_thumb.url}}"/>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% if photos.has_next %}
+      {% if 'person' in request.GET %}
+          <a class="infinite-more-link" href="?person={{ request.GET.person }}&page={{ photos.next_page_number }}"></a>
+      {% else %}
+        <a class="infinite-more-link" href="?page={{ photos.next_page_number }}"></a>
+      {% endif %}
+      <div class="d-flex justify-content-center" style="display:none;">
+          <div class="spinner-border" role="status">
+              <span class="sr-only">Loading...</span>
+          </div>
       </div>
+    {% endif %}
   </div>
   <script>
     var infinite = new Waypoint.Infinite({

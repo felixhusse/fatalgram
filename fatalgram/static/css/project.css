@@ -19,3 +19,11 @@
 .fatalgram-heading {
   font-weight: 300;
 }
+
+.scrolling-wrapper{
+	overflow-x: auto;
+}
+
+.person-selected {
+  border-color: #00A000;
+}

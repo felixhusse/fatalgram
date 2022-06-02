@@ -16,11 +16,11 @@ from .tasks import process_faces, process_photo_image, process_photo_zip
 def home(request):
 
     photo_list = Photo.objects.all().order_by("description").reverse()
-
+    selected_person = None
     if request.method == "GET" and "person" in request.GET:
         person_id = int(request.GET["person"])
-        person = Person.objects.get(pk=person_id)
-        photo_list = person.photos.all().order_by("description").reverse()
+        selected_person = Person.objects.get(pk=person_id)
+        photo_list = selected_person.photos.all().order_by("upload_date").reverse()
 
     persons = Person.objects.all()
     page = request.GET.get("page", 1)
@@ -31,7 +31,11 @@ def home(request):
         photos = paginator.page(1)
     except EmptyPage:
         photos = paginator.page(paginator.num_pages)
-    return render(request, "pages/home.html", {"photos": photos, "persons": persons})
+    return render(
+        request,
+        "pages/home.html",
+        {"photos": photos, "persons": persons, "selected_person": selected_person},
+    )
 
 
 @login_required(login_url="account_login")
